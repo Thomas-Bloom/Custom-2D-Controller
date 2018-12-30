@@ -7,15 +7,30 @@ using UnityEngine;
 [RequireComponent(typeof (Controller2D))]
 public class PlayerControls : MonoBehaviour {
 
-    public float moveSpeed;
-    public float gravity = -20f;
+    // Height of jump
+    public float jumpHeight;
+    // How long to take to highest point of jump
+    public float timeToJumpHeight;
 
+    public float moveSpeed;
+    public float accelerationAir;
+    public float accelerationGround;
+
+    private float jumpVelocity;
+    private float gravity;
     private Vector2 velocity;
+    private float velocityXSmoothing;
 
     private Controller2D controller;
 
     private void Start() {
         controller = GetComponent<Controller2D>();
+
+        // Equations
+        gravity = -(2 * jumpHeight) / Mathf.Pow(timeToJumpHeight, 2);
+        jumpVelocity = Mathf.Abs(gravity) * timeToJumpHeight;
+        print("Gravity: " + gravity);
+        print("JumpVelocity: " + jumpVelocity);
     }
 
     private void Update() {
@@ -23,13 +38,19 @@ public class PlayerControls : MonoBehaviour {
             velocity.y = 0;
         }
 
+        // Movement
         Vector2 input = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
+        float targetVelocity = input.x * moveSpeed * Time.deltaTime;
+        velocity.x = Mathf.SmoothDamp(velocity.x, targetVelocity, ref velocityXSmoothing, controller.collisionInfo.below ? accelerationGround : accelerationAir);
 
-        velocity.x = input.x * moveSpeed * Time.deltaTime;
+        // Jumping
+        // If jump button pressed while the player is standing on something
+        if (Input.GetButtonDown("Jump") && controller.collisionInfo.below) {
+            velocity.y = jumpVelocity;
+        }
 
         // Have gravity affect player's velocity every frame
         velocity.y += gravity * Time.deltaTime;
-
         controller.Move(velocity * Time.deltaTime);
     }
 }
