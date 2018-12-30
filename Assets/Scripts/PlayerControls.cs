@@ -7,6 +7,8 @@ using UnityEngine;
 [RequireComponent(typeof (Controller2D))]
 public class PlayerControls : MonoBehaviour {
 
+    public float moveSpeed;
+
     private float gravity = -20f;
     private Vector2 velocity;
 
@@ -17,6 +19,10 @@ public class PlayerControls : MonoBehaviour {
     }
 
     private void Update() {
+        Vector2 input = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
+
+        velocity.x = input.x * moveSpeed * Time.deltaTime;
+
         // Have gravity affect player's velocity every frame
         velocity.y += gravity * Time.deltaTime;
 

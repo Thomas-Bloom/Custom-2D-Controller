@@ -31,7 +31,13 @@ public class Controller2D : MonoBehaviour {
     public void Move(Vector2 velocity) {
         UpdateRayCastOrigins();
 
-        VerticalCollisions(ref velocity);
+        if(velocity.x != 0) {
+            HorizontalCollisions(ref velocity);
+        }
+
+        if(velocity.y != 0) {
+            VerticalCollisions(ref velocity);
+        }
 
         transform.Translate(velocity);
     }
@@ -47,11 +53,33 @@ public class Controller2D : MonoBehaviour {
 
             RaycastHit2D hit = Physics2D.Raycast(origin, dirY * Vector2.up, rayLength, collisionMask);
 
-            Debug.DrawRay(rayCastOrigins.bottomLeft + Vector2.right * verticalRaySpacing * i, Vector2.up * -2, Color.red);
+            Debug.DrawRay(origin, Vector2.up * dirY * rayLength, Color.red);
 
             // If raycast hits something
             if (hit) {
                 velocity.y = (hit.distance - skinWidth) * dirY;
+                rayLength = hit.distance;
+            }
+        }
+    }
+
+    private void HorizontalCollisions(ref Vector2 velocity) {
+        // Right = 1   Left = -1
+        float dirX = Mathf.Sign(velocity.x);
+        float rayLength = Mathf.Abs(velocity.x) + skinWidth;
+
+        for (int i = 0; i < horizontalRayCount; i++) {
+            Vector2 origin = (dirX == -1) ? origin = rayCastOrigins.bottomLeft : rayCastOrigins.bottomRight;
+            origin += Vector2.up * (horizontalRaySpacing * i);
+
+            RaycastHit2D hit = Physics2D.Raycast(origin, dirX * Vector2.right, rayLength, collisionMask);
+
+            Debug.DrawRay(origin, Vector2.right * dirX * rayLength, Color.red);
+
+
+            // If raycast hits something
+            if (hit) {
+                velocity.x = (hit.distance - skinWidth) * dirX;
                 rayLength = hit.distance;
             }
         }
