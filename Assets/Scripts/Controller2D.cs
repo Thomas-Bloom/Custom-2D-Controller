@@ -11,6 +11,8 @@ public class Controller2D : MonoBehaviour {
     public int horizontalRayCount = 4;
     public int verticalRayCount = 4;
 
+    public LayerMask collisionMask;
+
     private float horizontalRaySpacing;
     private float verticalRaySpacing;
 
@@ -23,14 +25,35 @@ public class Controller2D : MonoBehaviour {
 
     private void Start() {
         collider = GetComponent<BoxCollider2D>();
+        CalculateRaySpacing();
     }
 
-    private void Update() {
+    public void Move(Vector2 velocity) {
         UpdateRayCastOrigins();
-        CalculateRaySpacing();
 
-        for(int i = 0; i < verticalRayCount; i++) {
+        VerticalCollisions(ref velocity);
+
+        transform.Translate(velocity);
+    }
+
+    private void VerticalCollisions(ref Vector2 velocity) {
+        // Up = 1   Down = -1
+        float dirY = Mathf.Sign(velocity.y);
+        float rayLength = Mathf.Abs(velocity.y) + skinWidth;
+
+        for (int i = 0; i < verticalRayCount; i++) {
+            Vector2 origin = (dirY == -1) ? origin = rayCastOrigins.bottomLeft : rayCastOrigins.topLeft;
+            origin += Vector2.right * (verticalRaySpacing * i + velocity.x);
+
+            RaycastHit2D hit = Physics2D.Raycast(origin, dirY * Vector2.up, rayLength, collisionMask);
+
             Debug.DrawRay(rayCastOrigins.bottomLeft + Vector2.right * verticalRaySpacing * i, Vector2.up * -2, Color.red);
+
+            // If raycast hits something
+            if (hit) {
+                velocity.y = (hit.distance - skinWidth) * dirY;
+                rayLength = hit.distance;
+            }
         }
     }
 
