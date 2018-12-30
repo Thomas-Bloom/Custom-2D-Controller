@@ -12,6 +12,7 @@ public class Controller2D : MonoBehaviour {
     public int verticalRayCount = 4;
 
     public LayerMask collisionMask;
+    public CollisionInfo collisionInfo;
 
     private float horizontalRaySpacing;
     private float verticalRaySpacing;
@@ -30,6 +31,8 @@ public class Controller2D : MonoBehaviour {
 
     public void Move(Vector2 velocity) {
         UpdateRayCastOrigins();
+        // Reset collision indicators
+        collisionInfo.Reset();
 
         if(velocity.x != 0) {
             HorizontalCollisions(ref velocity);
@@ -59,6 +62,11 @@ public class Controller2D : MonoBehaviour {
             if (hit) {
                 velocity.y = (hit.distance - skinWidth) * dirY;
                 rayLength = hit.distance;
+
+                // Set correct collisionInfo boolean to true
+                // Right-hand side returns a boolean
+                collisionInfo.above = (dirY == 1);
+                collisionInfo.below = (dirY == -1);
             }
         }
     }
@@ -81,10 +89,16 @@ public class Controller2D : MonoBehaviour {
             if (hit) {
                 velocity.x = (hit.distance - skinWidth) * dirX;
                 rayLength = hit.distance;
+
+                // Set correct collisionInfo boolean to true
+                // Right-hand side returns a boolean
+                collisionInfo.right = (dirX == 1);
+                collisionInfo.left = (dirX == -1);
             }
         }
     }
 
+    // Determines where each ray is shot from (each corner of the controller's bounding box)
     private void UpdateRayCastOrigins() {
         AssignBounds();
         // Assign raycastorigins to the corners of the bounding box
@@ -114,7 +128,20 @@ public class Controller2D : MonoBehaviour {
         verticalRaySpacing = bounds.size.x / (verticalRayCount - 1);
     }
 
-    struct RayCastOrigins {
+    // Determine direction of collision (Above, below, right and left)
+    public struct CollisionInfo {
+        public bool above;
+        public bool below;
+        public bool right;
+        public bool left;
+
+        public void Reset() {
+            // Sets all collision direction indicators to false
+            above = below = right = left = false;
+        }
+    }
+
+    private struct RayCastOrigins {
         public Vector2 topLeft, topRight;
         public Vector2 bottomLeft, bottomRight;
     }

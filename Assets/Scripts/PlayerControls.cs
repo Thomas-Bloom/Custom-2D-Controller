@@ -8,8 +8,8 @@ using UnityEngine;
 public class PlayerControls : MonoBehaviour {
 
     public float moveSpeed;
+    public float gravity = -20f;
 
-    private float gravity = -20f;
     private Vector2 velocity;
 
     private Controller2D controller;
@@ -19,6 +19,10 @@ public class PlayerControls : MonoBehaviour {
     }
 
     private void Update() {
+        if(controller.collisionInfo.above || controller.collisionInfo.below) {
+            velocity.y = 0;
+        }
+
         Vector2 input = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
 
         velocity.x = input.x * moveSpeed * Time.deltaTime;
