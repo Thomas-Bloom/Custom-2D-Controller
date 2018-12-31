@@ -29,8 +29,6 @@ public class PlayerControls : MonoBehaviour {
         // Equations
         gravity = -(2 * jumpHeight) / Mathf.Pow(timeToJumpHeight, 2);
         jumpVelocity = Mathf.Abs(gravity) * timeToJumpHeight;
-        print("Gravity: " + gravity);
-        print("JumpVelocity: " + jumpVelocity);
     }
 
     private void Update() {
