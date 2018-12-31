@@ -52,7 +52,6 @@ public class MovingPlatform : RayCastController {
             return Vector2.zero;
         }
 
-        print("Global: " + globalWayPoints.Length);
         fromIndex %= globalWayPoints.Length;
 
         int toIndex = (fromIndex + 1) % globalWayPoints.Length;

@@ -7,6 +7,8 @@ public class Controller2D : RayCastController {
 
     public override void Start() {
         base.Start();
+
+        collisionInfo.direction = 1;
     }
 
     public void Move(Vector2 velocity, bool onPlatform = false) {
@@ -15,10 +17,12 @@ public class Controller2D : RayCastController {
         collisionInfo.Reset();
 
         if(velocity.x != 0) {
-            HorizontalCollisions(ref velocity);
+            collisionInfo.direction = (int)Mathf.Sign(velocity.x);
         }
 
-        if(velocity.y != 0) {
+        HorizontalCollisions(ref velocity);
+
+        if (velocity.y != 0) {
             VerticalCollisions(ref velocity);
         }
 
@@ -57,8 +61,12 @@ public class Controller2D : RayCastController {
 
     private void HorizontalCollisions(ref Vector2 velocity) {
         // Right = 1   Left = -1
-        float dirX = Mathf.Sign(velocity.x);
+        float dirX = collisionInfo.direction;
         float rayLength = Mathf.Abs(velocity.x) + skinWidth;
+
+        if(Mathf.Abs(velocity.x) < skinWidth) {
+            rayLength = skinWidth * 2;
+        }
 
         for (int i = 0; i < horizontalRayCount; i++) {
             Vector2 origin = (dirX == -1) ? origin = rayCastOrigins.bottomLeft : rayCastOrigins.bottomRight;
@@ -98,6 +106,7 @@ public class Controller2D : RayCastController {
         public bool below;
         public bool right;
         public bool left;
+        public int direction; // 1 = right  -1 = left
 
         public void Reset() {
             // Sets all collision direction indicators to false
