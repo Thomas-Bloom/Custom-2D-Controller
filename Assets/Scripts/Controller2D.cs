@@ -48,6 +48,15 @@ public class Controller2D : RayCastController {
 
             // If raycast hits something
             if (hit) {
+
+                if (hit.collider.tag.Equals("JumpThrough")) {
+                    // Is player moving up...?
+                    if(dirY == 1 || hit.distance == 0) {
+                        continue;
+                    }
+                }
+
+                // Constrain velocity so don't go through objects
                 velocity.y = (hit.distance - skinWidth) * dirY;
                 rayLength = hit.distance;
 
