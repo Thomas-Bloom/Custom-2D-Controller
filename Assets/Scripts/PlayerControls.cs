@@ -7,8 +7,10 @@ using UnityEngine;
 [RequireComponent(typeof (Controller2D))]
 public class PlayerControls : MonoBehaviour {
 
-    // Height of jump
-    public float jumpHeight;
+    // Max height of jump
+    public float maxJumpHeight;
+    // Min height of jump
+    public float minJumpheight;
     // How long to take to highest point of jump
     public float timeToJumpHeight;
 
@@ -22,7 +24,8 @@ public class PlayerControls : MonoBehaviour {
     public Vector2 wallJumpOff;
     public Vector2 wallJumpLarge;
 
-    private float jumpVelocity;
+    private float maxJumpVelocity;
+    private float minJumpVelocity;
     private float gravity;
     private Vector2 velocity;
     private float velocityXSmoothing;
@@ -36,8 +39,9 @@ public class PlayerControls : MonoBehaviour {
         controller = GetComponent<Controller2D>();
 
         // Equations
-        gravity = -(2 * jumpHeight) / Mathf.Pow(timeToJumpHeight, 2);
-        jumpVelocity = Mathf.Abs(gravity) * timeToJumpHeight;
+        gravity = -(2 * maxJumpHeight) / Mathf.Pow(timeToJumpHeight, 2);
+        maxJumpVelocity = Mathf.Abs(gravity) * timeToJumpHeight;
+        minJumpVelocity = Mathf.Sqrt(2 * Mathf.Abs(gravity) * minJumpheight);
     }
 
     private void Update() {
@@ -85,7 +89,8 @@ public class PlayerControls : MonoBehaviour {
 
        
         // Jumping
-        // If jump button pressed while the player is standing on something
+
+        // If jump button pressed
         if (Input.GetButtonDown("Jump")) {
             if (wallSliding) {
                 // Moving in same direction as the wall
@@ -103,9 +108,18 @@ public class PlayerControls : MonoBehaviour {
                 }
             }
             if (controller.collisionInfo.below) {
-                velocity.y = jumpVelocity;
+                velocity.y = maxJumpVelocity;
             }
         }
+
+        // If jump button is released
+        if (Input.GetButtonUp("Jump")) {
+            if(velocity.y > minJumpVelocity) {
+                velocity.y = minJumpVelocity;
+            }
+        }
+
+
 
         // Have gravity affect player's velocity every frame
         velocity.y += gravity * Time.deltaTime;
