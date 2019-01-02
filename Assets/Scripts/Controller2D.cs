@@ -8,6 +8,7 @@ public class Controller2D : RayCastController {
     public override void Start() {
         base.Start();
 
+        // Set the look direction to right at the start
         collisionInfo.direction = 1;
     }
 
@@ -16,16 +17,22 @@ public class Controller2D : RayCastController {
         // Reset collision indicators
         collisionInfo.Reset();
 
+        // Get the direction of the controller based upon their velocity
+        // If velocity.x > 0 then the direction will be 1
+        // If velocity.x < 0 then direction will be -1
         if(velocity.x != 0) {
             collisionInfo.direction = (int)Mathf.Sign(velocity.x);
         }
 
+        // Constantly check for hoziontal collisions
         HorizontalCollisions(ref velocity);
 
+        // Only check for vertical collisions if controller is moving up or down
         if (velocity.y != 0) {
             VerticalCollisions(ref velocity);
         }
 
+        // Move the controller
         transform.Translate(velocity);
 
         if (onPlatform) {
@@ -36,6 +43,7 @@ public class Controller2D : RayCastController {
     private void VerticalCollisions(ref Vector2 velocity) {
         // Up = 1   Down = -1
         float dirY = Mathf.Sign(velocity.y);
+        // Raycast length
         float rayLength = Mathf.Abs(velocity.y) + skinWidth;
 
         for (int i = 0; i < verticalRayCount; i++) {
