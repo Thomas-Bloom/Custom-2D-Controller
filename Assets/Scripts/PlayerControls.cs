@@ -8,10 +8,14 @@ using UnityEngine.UI;
 // Generates the Controller script if one is not found
 [RequireComponent(typeof (Controller2D))]
 public class PlayerControls : MonoBehaviour {
-
     [Header("Movement")]
     // Horizontal move speed
     public float moveSpeed;
+
+    [HideInInspector]
+    public bool canRun;
+    [HideInInspector]
+    public float runSpeedMultiplier;
 
     /* Affects movement on ground and in air
      * Movement on ground could be quicker 
@@ -20,8 +24,11 @@ public class PlayerControls : MonoBehaviour {
     public float accelerationAir;
     public float accelerationGround;
 
+    // Affects constant downward force upon the player
     private float gravity;
+    // Current velocity in any direction stored as a Vector (x, y)
     private Vector2 velocity;
+    // Smoothes movement when stopping -> Means player won't suddenly stop in place
     private float velocityXSmoothing;
 
     [Header("Jumping")]
@@ -32,6 +39,7 @@ public class PlayerControls : MonoBehaviour {
     // How long to take to highest point of jump
     public float timeToJumpHeight;
 
+    // These represent how high the different types of jumps will go by taking into account the gravity modifier and timeToJumpHeight
     private float maxJumpVelocity;
     private float minJumpVelocity;
 
@@ -67,6 +75,7 @@ public class PlayerControls : MonoBehaviour {
     [Header("Components")]
     private Controller2D controller;
 
+
     // At the start of execution
     private void Start() {
         // Assign controller component to variable
@@ -95,13 +104,22 @@ public class PlayerControls : MonoBehaviour {
         Vector2 input = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
         // Check for button held for climbing
         bool holdingClimb = Input.GetButton("Climb");
+        bool holdingRun = Input.GetAxisRaw("Run") > 0;
 
         // Returns number based on which direction collision is occuring
         int wallDirX = (controller.collisionInfo.left) ? -1 : 1;
 
         // MOVEMENT
+        float targetVelocity;
+
+        if (holdingRun) {
+            targetVelocity = input.x * moveSpeed * runSpeedMultiplier * Time.deltaTime;
+        }
+        else {
+            targetVelocity = input.x * moveSpeed * Time.deltaTime;
+        }
         // Assigns the desired velocity that the player wants to eventually move at
-        float targetVelocity = input.x * moveSpeed * Time.deltaTime;
+        
 
         // Slowly build up velocity till player hits targetVelocity
         velocity.x = Mathf.SmoothDamp(velocity.x, targetVelocity, ref velocityXSmoothing, controller.collisionInfo.below ? accelerationGround : accelerationAir);
@@ -122,29 +140,32 @@ public class PlayerControls : MonoBehaviour {
             if(wallTimeUnstick > 0) {
                 velocityXSmoothing = 0;
 
+                // Freeze player's x velocity so they don't come off the wall
                 velocity.x = 0;
 
+                // If they are on the wall...
                 if(input.x != wallDirX && input.x != 0) {
+                    // Reduce the timer
                     wallTimeUnstick -= Time.deltaTime;
                 }
                 else {
+                    // Reset the timer -> Player has come off the wall
                     wallTimeUnstick = wallStickTime;
                 }
             }
             else {
+                // Reset the timer -> Player has come off the wall
                 wallTimeUnstick = wallStickTime;
             }
         }
-
 
         if(controller.collisionInfo.above || controller.collisionInfo.below) {
             velocity.y = 0;
         }
 
-       
         // JUMPING
 
-        // If jump button pressed
+        //If jump button pressed
         if (Input.GetButtonDown("Jump")) {
             if (wallSliding) {
                 // Moving in same direction as the wall -> Climb up wall
@@ -175,15 +196,14 @@ public class PlayerControls : MonoBehaviour {
                 velocity.y = minJumpVelocity;
             }
         }
-
         // Have gravity affect player's velocity every frame
         velocity.y += gravity * Time.deltaTime;
         controller.Move(velocity * Time.deltaTime);
     }
 }
 
+// Editor script to show information based upon if boolean is true
 
-// Editor script
 [CustomEditor(typeof (PlayerControls))]
 public class PlayerControlsEditor : Editor {
     public override void OnInspectorGUI() {
@@ -191,6 +211,18 @@ public class PlayerControlsEditor : Editor {
         DrawDefaultInspector();
 
         PlayerControls playerControls = (PlayerControls)target;
+
+        EditorGUILayout.Space();
+        EditorGUILayout.LabelField("Ability Enablers", EditorStyles.boldLabel);
+
+        // RUN ENABLER
+        #region RunEnable
+        playerControls.canRun = EditorGUILayout.Toggle("Can run", playerControls.canRun);
+
+        if (playerControls.canRun) {
+            playerControls.runSpeedMultiplier = EditorGUILayout.FloatField("Run Speed Multiplier", playerControls.runSpeedMultiplier);
+        }
+        #endregion
 
         // WALL JUMP ENABLER
         #region WallJumpEnable
@@ -205,5 +237,7 @@ public class PlayerControlsEditor : Editor {
             playerControls.wallJumpLarge = EditorGUILayout.Vector2Field("Wall Jump Large", playerControls.wallJumpLarge);
         }
         #endregion
+
     }
 }
+ 
